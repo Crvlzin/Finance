@@ -18,6 +18,7 @@ import type { Account, Goal, Transaction } from '@/types'
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('dashboard')
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
   const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
   const [categories] = useState(mockCategories)
@@ -87,13 +88,19 @@ export function App() {
     setGoals((prev) => [newGoal, ...prev])
   }
 
+  // Redireciona para a tela de transações e abre o formulário
+  const handleNavigateToNewTransaction = () => {
+    setCurrentTab('transactions')
+    setIsAddTxModalOpen(true)
+  }
+
   // Títulos e subtítulos contextuais para o Header
   const getHeaderMeta = () => {
     switch (currentTab) {
       case 'dashboard':
         return {
-          title: 'Visão Geral & Indicadores',
-          subtitle: 'Acompanhe seu fluxo financeiro consolidado em tempo real',
+          title: 'Página Inicial',
+          subtitle: 'Visão consolidada do seu patrimônio e fluxo financeiro em tempo real',
         }
       case 'transactions':
         return {
@@ -122,11 +129,13 @@ export function App() {
 
   return (
     <div className="flex min-h-screen bg-[#0b0f17] text-slate-100">
-      {/* Sidebar de Navegação */}
+      {/* Sidebar de Navegação com Colapso/Expansão */}
       <Sidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         totalBalance={totalBalance}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
       {/* Área Central de Conteúdo */}
@@ -134,7 +143,9 @@ export function App() {
         <Header
           title={title}
           subtitle={subtitle}
-          onOpenNewTransaction={() => setIsAddTxModalOpen(true)}
+          onNavigateToNewTransaction={handleNavigateToNewTransaction}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
         />
 
         <main className="flex-1 p-8 overflow-y-auto">
