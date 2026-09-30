@@ -10,7 +10,7 @@ import type { Account, Category, Goal, Transaction } from '@/types'
 export function useFinance() {
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
   const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
-  const [categories] = useState<Category[]>(mockCategories)
+  const [categories, setCategories] = useState<Category[]>(mockCategories)
   const [goals, setGoals] = useState<Goal[]>(mockGoals)
 
   // Cálculos consolidados memorizados
@@ -90,6 +90,26 @@ export function useFinance() {
     }
   }, [])
 
+  // Mutação: Adicionar banco / conta
+  const addAccount = useCallback((newAccData: Omit<Account, 'id'>) => {
+    const newAcc: Account = {
+      ...newAccData,
+      id: `acc-${Date.now()}`,
+    }
+    setAccounts((prev) => [...prev, newAcc])
+    return newAcc
+  }, [])
+
+  // Mutação: Adicionar categoria
+  const addCategory = useCallback((newCatData: Omit<Category, 'id'>) => {
+    const newCat: Category = {
+      ...newCatData,
+      id: `cat-${Date.now()}`,
+    }
+    setCategories((prev) => [...prev, newCat])
+    return newCat
+  }, [])
+
   // Mutação: Adicionar meta
   const addGoal = useCallback((newGoal: Goal) => {
     setGoals((prev) => [newGoal, ...prev])
@@ -109,6 +129,8 @@ export function useFinance() {
     totalCurrentInvestments,
     addTransaction,
     importTransactions,
+    addAccount,
+    addCategory,
     addGoal,
   }
 }

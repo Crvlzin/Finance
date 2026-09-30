@@ -27,6 +27,8 @@ export function App() {
     totalCurrentInvestments,
     addTransaction,
     importTransactions,
+    addAccount,
+    addCategory,
     addGoal,
   } = useFinance()
 
@@ -113,6 +115,8 @@ export function App() {
               accounts={accounts}
               categories={categories}
               onAddTransaction={addTransaction}
+              onAddAccount={addAccount}
+              onAddCategory={addCategory}
               isModalOpen={isAddTxModalOpen}
               setIsModalOpen={setIsAddTxModalOpen}
               showValues={showValues}
