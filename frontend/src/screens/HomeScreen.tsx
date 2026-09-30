@@ -123,8 +123,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* 2. Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fluxo de Caixa (2 colunas) */}
-        <div className="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+        <div className="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-bold text-white tracking-tight">Fluxo de Caixa Mensal</h2>
               <p className="text-xs text-slate-400">Comparativo de Receitas vs Despesas (Últimos 6 meses)</p>
@@ -139,7 +139,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="w-full flex-1 min-h-[300px] mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -167,7 +167,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     color: '#FFF',
                     fontSize: '12px',
                   }}
-                  formatter={(value: any) => formatPrivateValue(Number(value))}
+                  formatter={(value: any, name: any) => [
+                    formatPrivateValue(Number(value)),
+                    name === 'receitas' ? 'Receitas' : name === 'despesas' ? 'Despesas' : name,
+                  ]}
                 />
                 <Area
                   type="monotone"
@@ -205,6 +208,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <PieChart>
                 <Pie
                   data={categoryExpenses}
+                  nameKey="category"
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
@@ -235,7 +239,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     color: '#FFF',
                     fontSize: '12px',
                   }}
-                  formatter={(value: any) => formatPrivateValue(Number(value))}
+                  formatter={(value: any, name: any) => [
+                    formatPrivateValue(Number(value)),
+                    name || 'Total',
+                  ]}
                 />
               </PieChart>
             </ResponsiveContainer>
