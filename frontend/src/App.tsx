@@ -49,7 +49,7 @@ export function App() {
         }
       case 'transactions':
         return {
-          title: 'Transações & Extrato',
+          title: 'Transações',
           subtitle: 'Histórico completo de entradas, despesas e transferências',
         }
       case 'import':

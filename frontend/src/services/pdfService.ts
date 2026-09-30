@@ -19,80 +19,51 @@ export interface ExtractedStatementItem {
   rawLine?: string
 }
 
-/**
- * Mapeia meses abreviados em português para número com 2 dígitos
- */
-const MONTH_MAP: Record<string, string> = {
-  jan: '01',
-  fev: '02',
-  mar: '03',
-  abr: '04',
-  mai: '05',
-  jun: '06',
-  jul: '07',
-  ago: '08',
-  set: '09',
-  out: '10',
-  nov: '11',
-  dez: '12',
+interface RawPdfItem {
+  str: string
+  x: number
+  y: number
 }
 
 /**
- * Extrai todo o texto legível de um ArrayBuffer de PDF
+ * Mapeia meses abreviados e por extenso em português para número com 2 dígitos
  */
-export async function extractTextFromPdf(pdfBuffer: ArrayBuffer): Promise<string[]> {
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer })
-  const pdfDocument = await loadingTask.promise
-  const lines: string[] = []
-
-  for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-    const page = await pdfDocument.getPage(pageNum)
-    const textContent = await page.getTextContent()
-
-    // Agrupa itens de texto em linhas com base na coordenada Y
-    let currentY: number | null = null
-    let currentLine = ''
-
-    for (const item of textContent.items) {
-      if ('str' in item && typeof item.str === 'string') {
-        const text = item.str.trim()
-        if (!text) continue
-
-        // Se mudou de linha (coordenada Y com tolerância de 4px)
-        const transform = item.transform
-        const itemY = transform ? Math.round(transform[5]) : null
-
-        if (currentY !== null && itemY !== null && Math.abs(currentY - itemY) > 4) {
-          if (currentLine.trim()) {
-            lines.push(currentLine.trim())
-          }
-          currentLine = text
-          currentY = itemY
-        } else {
-          currentLine = currentLine ? `${currentLine} ${text}` : text
-          if (currentY === null && itemY !== null) {
-            currentY = itemY
-          }
-        }
-      }
-    }
-
-    if (currentLine.trim()) {
-      lines.push(currentLine.trim())
-    }
-  }
-
-  return lines
+const MONTH_MAP: Record<string, string> = {
+  jan: '01',
+  janeiro: '01',
+  fev: '02',
+  fevereiro: '02',
+  mar: '03',
+  marco: '03',
+  março: '03',
+  abr: '04',
+  abril: '04',
+  mai: '05',
+  maio: '05',
+  jun: '06',
+  junho: '06',
+  jul: '07',
+  julho: '07',
+  ago: '08',
+  agosto: '08',
+  set: '09',
+  setembro: '09',
+  out: '10',
+  outubro: '10',
+  nov: '11',
+  novembro: '11',
+  dez: '12',
+  dezembro: '12',
 }
 
 /**
  * Normaliza datas variadas de extratos brasileiros para o formato ISO YYYY-MM-DD
  */
-function normalizeDate(rawDateStr: string): string {
-  const currentYear = new Date().getFullYear()
+export function normalizeDate(rawDateStr: string, fallbackYear?: number): string {
+  const currentYear = fallbackYear || new Date().getFullYear()
 
-  // Formato DD/MM/AAAA ou DD/MM/AA
-  if (rawDateStr.includes('/') || rawDateStr.includes('-')) {
+  // Formato DD/MM/AAAA ou DD-MM-AAAA ou DD/MM/AA
+  if (rawDateStr.includes('/') || rawDateStr.includes('-') || rawDateStr.includes('.')) {
     const parts = rawDateStr.split(/[/.-]/)
     if (parts.length === 3) {
       const day = parts[0].padStart(2, '0')
@@ -108,114 +79,362 @@ function normalizeDate(rawDateStr: string): string {
     }
   }
 
-  // Formato "02 SET" ou "15 OUT" (muito comum no Nubank)
-  const parts = rawDateStr.trim().split(/\s+/)
+  // Formato "02 SET", "03 de agosto", "15 OUT 2026"
+  const clean = rawDateStr.toLowerCase().replace(/de\s+/g, '').trim()
+  const parts = clean.split(/\s+/)
   if (parts.length >= 2) {
     const day = parts[0].padStart(2, '0')
-    const monthStr = parts[1].toLowerCase().slice(0, 3)
-    const month = MONTH_MAP[monthStr] || '01'
-    return `${currentYear}-${month}-${day}`
+    const monthKey = parts[1].slice(0, 3)
+    const month = MONTH_MAP[monthKey] || '01'
+    const year = parts[2] && parts[2].length === 4 ? parts[2] : `${currentYear}`
+    return `${year}-${month}-${day}`
   }
 
   return new Date().toISOString().split('T')[0]
 }
 
 /**
- * Analisa as linhas de texto extraídas do PDF e identifica lançamentos bancários
+ * Parser de alta precisão específico para extratos tabulares do Mercado Pago.
+ * Usa geometria de colunas (Data, Descrição, ID, Valor, Saldo) e resolve carry-over entre páginas.
+ */
+function parseMercadoPagoStatement(pagesItems: RawPdfItem[][]): ExtractedStatementItem[] {
+  const allTransactions: ExtractedStatementItem[] = []
+  let carryOverText = ''
+
+  for (let pageIdx = 0; pageIdx < pagesItems.length; pageIdx++) {
+    const pageNum = pageIdx + 1
+    const items = pagesItems[pageIdx]
+
+    // Limites verticais da tabela de movimentações
+    const minY = pageNum === pagesItems.length ? 75 : 15
+    const maxY = pageNum === 1 ? 435 : 575
+
+    const tableItems = items.filter((it) => it.y >= minY && it.y <= maxY)
+
+    // Coluna de Valor monetário (X entre 280 e 345)
+    const valueItems = tableItems.filter(
+      (it) => it.x >= 280 && it.x <= 345 && /R\$\s*[-+]?\d+/i.test(it.str)
+    )
+
+    // Ordena os valores de cima para baixo (Y decrescente)
+    valueItems.sort((a, b) => b.y - a.y)
+
+    // Identifica textos órfãos abaixo do último valor que pertencem à primeira transação da próxima página
+    const lowestValY = valueItems.length > 0 ? valueItems[valueItems.length - 1].y : minY
+    const bottomOrphans = tableItems.filter(
+      (it) => it.y < lowestValY - 14 && it.x >= 80 && it.x <= 188
+    )
+    bottomOrphans.sort((a, b) => b.y - a.y || a.x - b.x)
+    const nextCarryOver = bottomOrphans.map((it) => it.str).join(' ')
+
+    for (let i = 0; i < valueItems.length; i++) {
+      const valItem = valueItems[i]
+      const prevY = i === 0 ? maxY + 20 : (valueItems[i - 1].y + valItem.y) / 2
+      const nextY =
+        i === valueItems.length - 1 ? lowestValY - 14 : (valItem.y + valueItems[i + 1].y) / 2
+
+      // Pega todos os itens da linha correspondente a essa faixa Y
+      const rowItems = tableItems.filter((it) => it.y < prevY && it.y >= nextY)
+
+      // Coluna Data (X < 85)
+      const dateItem = rowItems.find((it) => it.x < 85 && /\d{2}[-./]\d{2}[-./]\d{2,4}/.test(it.str))
+      const dateStr = dateItem ? normalizeDate(dateItem.str) : new Date().toISOString().split('T')[0]
+
+      // Valor e tipo
+      const rawValStr = valItem.str.replace('R$', '').trim()
+      const isNegative = rawValStr.includes('-')
+      const numVal = Math.abs(
+        parseFloat(rawValStr.replace(/[-+]/g, '').replace(/\./g, '').replace(',', '.'))
+      )
+
+      if (isNaN(numVal) || numVal === 0) continue
+
+      // Descrição (X entre 80 e 188)
+      const descItems = rowItems.filter((it) => it.x >= 80 && it.x <= 188)
+      descItems.sort((a, b) => b.y - a.y || a.x - b.x)
+      let desc = descItems.map((it) => it.str).join(' ').trim()
+
+      // Se for a primeira transação da página e houver texto órfão da página anterior, prepend
+      if (i === 0 && carryOverText) {
+        desc = `${carryOverText} ${desc}`.trim()
+      }
+
+      // Limpa IDs de operação residuais
+      desc = desc
+        .replace(/\b\d{5,}\b/g, '')
+        .replace(/[-_#:]+\s*$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      if (desc.toLowerCase() === 'rendimentos' || desc.toLowerCase() === 'rendimento' || !desc) {
+        desc = 'Rendimentos Mercado Pago'
+      }
+
+      allTransactions.push({
+        date: dateStr,
+        description: desc,
+        amount: numVal,
+        type: isNegative ? 'expense' : 'income',
+        rawLine: valItem.str,
+      })
+    }
+
+    carryOverText = nextCarryOver
+  }
+
+  return allTransactions
+}
+
+/**
+ * Parser genérico para outros bancos com agrupamento visual e Sticky Date (data contínua).
+ */
+function parseGenericPdfStatement(pagesItems: RawPdfItem[][]): ExtractedStatementItem[] {
+  const allLines: string[] = []
+
+  for (const pageItems of pagesItems) {
+    // Agrupa itens em linhas ordenadas (Y decrescente, X crescente)
+    const items = [...pageItems]
+    items.sort((a, b) => b.y - a.y || a.x - b.x)
+
+    let curLine: RawPdfItem[] = []
+    let curY: number | null = null
+
+    for (const it of items) {
+      if (curY === null || Math.abs(curY - it.y) <= 4) {
+        curLine.push(it)
+        if (curY === null) curY = it.y
+      } else {
+        curLine.sort((a, b) => a.x - b.x)
+        allLines.push(curLine.map((c) => c.str).join(' '))
+        curLine = [it]
+        curY = it.y
+      }
+    }
+    if (curLine.length) {
+      curLine.sort((a, b) => a.x - b.x)
+      allLines.push(curLine.map((c) => c.str).join(' '))
+    }
+  }
+
+  return parseBankStatementLines(allLines)
+}
+
+/**
+ * Função principal que processa o buffer do PDF com seleção de parser inteligente
+ */
+export async function parsePdfStatement(pdfBuffer: ArrayBuffer): Promise<ExtractedStatementItem[]> {
+  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer })
+  const pdfDocument = await loadingTask.promise
+  const pagesItems: RawPdfItem[][] = []
+  let fullRawText = ''
+
+  for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+    const page = await pdfDocument.getPage(pageNum)
+    const textContent = await page.getTextContent()
+
+    const items: RawPdfItem[] = []
+    for (const item of textContent.items) {
+      if ('str' in item && typeof item.str === 'string' && item.str.trim()) {
+        const x = item.transform ? Math.round(item.transform[4]) : 0
+        const y = item.transform ? Math.round(item.transform[5]) : 0
+        items.push({ str: item.str.trim(), x, y })
+        fullRawText += ` ${item.str}`
+      }
+    }
+    pagesItems.push(items)
+  }
+
+  const isMercadoPago =
+    fullRawText.toLowerCase().includes('mercado pago') ||
+    fullRawText.toLowerCase().includes('detalhe dos movimentos') ||
+    fullRawText.toLowerCase().includes('id da operação')
+
+  if (isMercadoPago) {
+    return parseMercadoPagoStatement(pagesItems)
+  }
+
+  return parseGenericPdfStatement(pagesItems)
+}
+
+/**
+ * Extrai todo o texto legível agrupado por linhas (compatibilidade)
+ */
+export async function extractTextFromPdf(pdfBuffer: ArrayBuffer): Promise<string[]> {
+  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer })
+  const pdfDocument = await loadingTask.promise
+  const lines: string[] = []
+
+  for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+    const page = await pdfDocument.getPage(pageNum)
+    const textContent = await page.getTextContent()
+
+    const items: RawPdfItem[] = []
+    for (const item of textContent.items) {
+      if ('str' in item && typeof item.str === 'string' && item.str.trim()) {
+        const x = item.transform ? Math.round(item.transform[4]) : 0
+        const y = item.transform ? Math.round(item.transform[5]) : 0
+        items.push({ str: item.str.trim(), x, y })
+      }
+    }
+
+    items.sort((a, b) => b.y - a.y || a.x - b.x)
+
+    let curLine: RawPdfItem[] = []
+    let curY: number | null = null
+
+    for (const it of items) {
+      if (curY === null || Math.abs(curY - it.y) <= 4) {
+        curLine.push(it)
+        if (curY === null) curY = it.y
+      } else {
+        curLine.sort((a, b) => a.x - b.x)
+        lines.push(curLine.map((c) => c.str).join(' '))
+        curLine = [it]
+        curY = it.y
+      }
+    }
+    if (curLine.length) {
+      curLine.sort((a, b) => a.x - b.x)
+      lines.push(curLine.map((c) => c.str).join(' '))
+    }
+  }
+
+  return lines
+}
+
+/**
+ * Analisa as linhas de texto extraídas e identifica lançamentos bancários
+ * Suporta Sticky Date para capturar múltiplas transações no mesmo dia sem repetir a data.
  */
 export function parseBankStatementLines(lines: string[]): ExtractedStatementItem[] {
   const items: ExtractedStatementItem[] = []
 
-  // Regex para identificar datas comuns em extratos
-  // 1. DD/MM/AAAA ou DD/MM (ex: 15/09/2026, 15/09)
-  // 2. DD MMM (ex: 02 SET, 14 OUT)
-  // 3. AAAA-MM-DD
   const dateRegex =
-    /(\b\d{2}[/.-]\d{2}(?:[/.-]\d{2,4})?\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s+(?:JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ)[a-z]*\b)/i
+    /(\b\d{1,2}\s*(?:\/|-|\.)\s*\d{1,2}(?:\s*(?:\/|-|\.)\s*\d{2,4})?\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\s+(?:de\s+)?(?:jan(?:eiro)?|fev(?:ereiro)?|mar(?:ço|co)?|abr(?:il)?|mai(?:o)?|jun(?:ho)?|jul(?:ho)?|ago(?:sto)?|set(?:embro)?|out(?:ubro)?|nov(?:embro)?|dez(?:embro)?)(?:\s+(?:de\s+)?\d{2,4})?\b)/i
 
-  // Regex para capturar valores monetários no formato brasileiro ou com ponto
-  // Ex: 1.250,50 | -340,00 | R$ 42,90 | 150,00 D | 200,00 C | +5.000,00
   const amountRegex =
     /(?:R\$\s*)?([-+]?\s*\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\s*\d+,\d{2}|[-+]?\s*\d+\.\d{2})\s*([CDcd+-])?/
 
+  let lastKnownDate = new Date().toISOString().split('T')[0]
+
   for (const line of lines) {
-    // Ignora linhas de cabeçalho comuns, saldos anteriores e rodapés
     const lowerLine = line.toLowerCase()
+
+    // Ignora cabeçalhos, rodapés e saldos que não representam transações individuais
     if (
       lowerLine.includes('saldo anterior') ||
       lowerLine.includes('saldo final') ||
+      lowerLine.includes('saldo inicial') ||
       lowerLine.includes('saldo disponível') ||
-      lowerLine.includes('saldo do dia') ||
       lowerLine.includes('total de entradas') ||
       lowerLine.includes('total de saídas') ||
-      lowerLine.includes('extrato de conta') ||
-      lowerLine.includes('comprovante') ||
+      lowerLine.includes('ouvidoria') ||
       lowerLine.includes('página') ||
-      lowerLine.includes('ouvidoria')
+      lowerLine.includes('comprovante')
     ) {
       continue
     }
 
     const dateMatch = line.match(dateRegex)
-    if (!dateMatch) continue
+    if (dateMatch) {
+      lastKnownDate = normalizeDate(dateMatch[0])
+    }
 
-    const rawDate = dateMatch[0]
-    const dateIndex = dateMatch.index ?? 0
-
-    // Remove a data da linha para isolar descrição e valor
-    const afterDate = line.slice(dateIndex + rawDate.length).trim()
-    const amountMatch = afterDate.match(amountRegex)
-
+    // Busca valor monetário
+    const amountMatch = line.match(amountRegex)
     if (!amountMatch) continue
 
     const rawAmountStr = amountMatch[1]
     const suffix = amountMatch[2]
 
-    // Limpa e extrai a descrição entre a data e o valor
-    const amountIndex = afterDate.indexOf(amountMatch[0])
-    let description = afterDate.slice(0, amountIndex).trim()
-
-    // Se a descrição ficou vazia, tenta pegar antes da data
-    if (!description && dateIndex > 0) {
-      description = line.slice(0, dateIndex).trim()
-    }
-
-    if (!description || description.length < 2) {
-      description = 'Lançamento Extrato'
-    }
-
-    // Normaliza o valor numérico
-    let cleanAmountStr = rawAmountStr.replace(/\./g, '').replace(',', '.')
-    let numAmount = Math.abs(parseFloat(cleanAmountStr))
-
+    // Limpa valor numérico
+    const cleanAmountStr = rawAmountStr.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '')
+    const numAmount = Math.abs(parseFloat(cleanAmountStr))
     if (isNaN(numAmount) || numAmount === 0) continue
+
+    // Extrai descrição removendo a data e o valor da linha
+    let desc = line
+    if (dateMatch) {
+      desc = desc.replace(dateMatch[0], '')
+    }
+    desc = desc.replace(amountMatch[0], '')
+
+    // Remove códigos de operação e IDs bancários
+    desc = desc
+      .replace(/\b\d{5,}\b/g, '')
+      .replace(/DOC\s*[:.-]?\s*\d+/gi, '')
+      .replace(/OP\s*[:.-]?\s*\d+/gi, '')
+      .replace(/ID\s*[:.-]?\s*\d+/gi, '')
+      .replace(/PIX\s*[:.-]?\s*\d+/gi, '')
+      .replace(/[-_#:]+\s*$/g, '')
+      .replace(/^\s*[-_#:]+/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if (!desc || desc.length < 2) {
+      desc = lowerLine.includes('rendimento') ? 'Rendimentos da Conta' : 'Lançamento Extrato'
+    } else if (desc.toLowerCase() === 'rendimentos' || desc.toLowerCase() === 'rendimento') {
+      desc = 'Rendimentos da Conta'
+    }
 
     // Determina o tipo (income / expense)
     let type: 'income' | 'expense' = 'expense'
 
-    const hasNegativeSign = rawAmountStr.includes('-') || line.includes('- ' + rawAmountStr)
+    const hasNegativeSign =
+      rawAmountStr.includes('-') ||
+      line.includes('- ' + rawAmountStr.replace(/[-+]/g, '').trim()) ||
+      line.includes('-' + rawAmountStr.replace(/[-+]/g, '').trim()) ||
+      line.endsWith('-')
     const hasDebitSuffix = suffix?.toUpperCase() === 'D' || suffix === '-'
     const hasCreditSuffix = suffix?.toUpperCase() === 'C' || suffix === '+'
 
     const isIncomeKeyword =
+      lowerLine.includes('rendimento') ||
       lowerLine.includes('salario') ||
       lowerLine.includes('salário') ||
-      lowerLine.includes('rendimento') ||
-      lowerLine.includes('recebido') ||
       lowerLine.includes('provento') ||
+      lowerLine.includes('dividendo') ||
+      lowerLine.includes('juros') ||
       lowerLine.includes('ted recebida') ||
       lowerLine.includes('pix recebido') ||
-      lowerLine.includes('depósito')
+      lowerLine.includes('transferência recebida') ||
+      lowerLine.includes('transferencia recebida') ||
+      lowerLine.includes('recebido de') ||
+      lowerLine.includes('recebida de') ||
+      lowerLine.includes('depósito') ||
+      lowerLine.includes('deposito') ||
+      lowerLine.includes('estorno') ||
+      lowerLine.includes('reembolso') ||
+      lowerLine.includes('cashback')
 
-    if (hasCreditSuffix || (!hasNegativeSign && !hasDebitSuffix && isIncomeKeyword)) {
+    const isExpenseKeyword =
+      lowerLine.includes('transferência enviada') ||
+      lowerLine.includes('transferencia enviada') ||
+      lowerLine.includes('pix enviado') ||
+      lowerLine.includes('ted enviada') ||
+      lowerLine.includes('enviado para') ||
+      lowerLine.includes('enviada para') ||
+      lowerLine.includes('compra') ||
+      lowerLine.includes('pagamento') ||
+      lowerLine.includes('pagto') ||
+      lowerLine.includes('pgto') ||
+      lowerLine.includes('tarifa') ||
+      lowerLine.includes('taxa') ||
+      lowerLine.includes('fatura') ||
+      lowerLine.includes('saque') ||
+      lowerLine.includes('retirada')
+
+    if (lowerLine.includes('rendimento')) {
+      type = 'income'
+    } else if (hasCreditSuffix || (!hasNegativeSign && !hasDebitSuffix && isIncomeKeyword && !isExpenseKeyword)) {
       type = 'income'
     } else {
       type = 'expense'
     }
 
     items.push({
-      date: normalizeDate(rawDate),
-      description: description.replace(/\s+/g, ' ').trim(),
+      date: lastKnownDate,
+      description: desc,
       amount: numAmount,
       type,
       rawLine: line,

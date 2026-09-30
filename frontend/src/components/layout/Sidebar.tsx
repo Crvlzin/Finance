@@ -30,9 +30,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems: MenuItem[] = [
     { id: 'visao-geral', label: 'Visão Geral', icon: Home },
-    { id: 'transactions', label: 'Transações & Extrato', icon: ReceiptText },
-    { id: 'simulations', label: 'Simulador Financeiro', icon: TrendingUp, highlight: true },
-    { id: 'goals', label: 'Metas & Reserva', icon: Target },
+    { id: 'transactions', label: 'Transações', icon: ReceiptText },
+    { id: 'simulations', label: 'Simulador', icon: TrendingUp, highlight: true },
+    { id: 'goals', label: 'Metas e Reserva', icon: Target },
   ]
 
   return (

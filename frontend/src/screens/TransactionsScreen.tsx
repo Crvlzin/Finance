@@ -243,12 +243,12 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
           <button
             onClick={() => setActiveSubTab('list')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${activeSubTab === 'list'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
           >
             <ReceiptText className="w-4 h-4" />
-            <span>Extrato & Lançamentos</span>
+            <span>Extrato</span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${activeSubTab === 'list' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-slate-300'
                 }`}
@@ -260,12 +260,12 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
           <button
             onClick={() => setActiveSubTab('import')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${activeSubTab === 'import'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
           >
             <UploadCloud className="w-4 h-4" />
-            <span>Importar Extrato (PDF / CSV)</span>
+            <span>Importar Extrato</span>
           </button>
         </div>
 
@@ -316,8 +316,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                 <button
                   onClick={() => setSelectedType('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${selectedType === 'all'
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                   Todos
@@ -325,8 +325,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                 <button
                   onClick={() => setSelectedType('income')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${selectedType === 'income'
-                      ? 'bg-emerald-500/20 text-emerald-400 shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-emerald-500/20 text-emerald-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                   Receitas
@@ -334,8 +334,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                 <button
                   onClick={() => setSelectedType('expense')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${selectedType === 'expense'
-                      ? 'bg-rose-500/20 text-rose-400 shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-rose-500/20 text-rose-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                   Despesas
@@ -399,7 +399,7 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                     <th className="py-3.5 px-6">Conta / Método</th>
                     <th className="py-3.5 px-6">Data</th>
                     <th className="py-3.5 px-6 text-right">Valor</th>
-                    <th className="py-3.5 px-4 text-center">Ações</th>
+                    <th className="py-3.5 px-4 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -417,8 +417,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tx.type === 'income'
-                                  ? 'bg-emerald-500/10 text-emerald-400'
-                                  : 'bg-rose-500/10 text-rose-400'
+                                ? 'bg-emerald-500/10 text-emerald-400'
+                                : 'bg-rose-500/10 text-rose-400'
                                 }`}
                             >
                               {tx.type === 'income' ? (
@@ -502,6 +502,7 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
           accounts={accounts}
           categories={categories}
           onImportTransactions={onImportTransactions}
+          onAddCategory={onAddCategory}
           onSuccess={(count) => {
             setActiveSubTab('list')
             setImportSuccessAlert(`Sucesso! ${count} transações foram conciliadas e adicionadas ao seu extrato.`)
@@ -532,8 +533,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                   type="button"
                   onClick={() => setType('expense')}
                   className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${type === 'expense'
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                      : 'text-slate-400 hover:text-white'
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                    : 'text-slate-400 hover:text-white'
                     }`}
                 >
                   Despesa (-)
@@ -542,8 +543,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                   type="button"
                   onClick={() => setType('income')}
                   className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${type === 'income'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                      : 'text-slate-400 hover:text-white'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-slate-400 hover:text-white'
                     }`}
                 >
                   Receita (+)
@@ -752,8 +753,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                       type="button"
                       onClick={() => setNewAccType(t.id as Account['type'])}
                       className={`py-2 px-2.5 text-xs font-medium rounded-xl border text-center transition-colors cursor-pointer ${newAccType === t.id
-                          ? 'bg-blue-500/15 border-blue-500 text-blue-300 shadow-xs'
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        ? 'bg-blue-500/15 border-blue-500 text-blue-300 shadow-xs'
+                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                         }`}
                     >
                       {t.label}
@@ -849,8 +850,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                   type="button"
                   onClick={() => setNewCatType('expense')}
                   className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${newCatType === 'expense'
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                      : 'text-slate-400 hover:text-white'
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                    : 'text-slate-400 hover:text-white'
                     }`}
                 >
                   Despesa (-)
@@ -859,8 +860,8 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                   type="button"
                   onClick={() => setNewCatType('income')}
                   className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${newCatType === 'income'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                      : 'text-slate-400 hover:text-white'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-slate-400 hover:text-white'
                     }`}
                 >
                   Receita (+)
