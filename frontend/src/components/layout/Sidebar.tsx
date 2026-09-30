@@ -2,12 +2,20 @@ import React from 'react'
 import {
   Home,
   ReceiptText,
-  FileSpreadsheet,
   TrendingUp,
   Target,
+  type LucideIcon,
 } from 'lucide-react'
 
 export type TabType = 'visao-geral' | 'transactions' | 'import' | 'simulations' | 'goals'
+
+interface MenuItem {
+  id: TabType
+  label: string
+  icon: LucideIcon
+  badge?: string
+  highlight?: boolean
+}
 
 interface SidebarProps {
   currentTab: TabType
@@ -20,12 +28,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   isCollapsed,
 }) => {
-  const menuItems = [
-    { id: 'visao-geral' as TabType, label: 'Visão Geral', icon: Home },
-    { id: 'transactions' as TabType, label: 'Transações', icon: ReceiptText },
-    { id: 'import' as TabType, label: 'Importar CSV', icon: FileSpreadsheet, badge: 'Smart' },
-    { id: 'simulations' as TabType, label: 'Simulador Financeiro', icon: TrendingUp, highlight: true },
-    { id: 'goals' as TabType, label: 'Metas & Reserva', icon: Target },
+  const menuItems: MenuItem[] = [
+    { id: 'visao-geral', label: 'Visão Geral', icon: Home },
+    { id: 'transactions', label: 'Transações & Extrato', icon: ReceiptText },
+    { id: 'simulations', label: 'Simulador Financeiro', icon: TrendingUp, highlight: true },
+    { id: 'goals', label: 'Metas & Reserva', icon: Target },
   ]
 
   return (

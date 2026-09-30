@@ -110,6 +110,57 @@ export function useFinance() {
     return newCat
   }, [])
 
+  // Mutação: Atualizar transação existente com conciliação do saldo
+  const updateTransaction = useCallback((updatedTx: Transaction) => {
+    setTransactions((prevTxs) => {
+      const oldTx = prevTxs.find((t) => t.id === updatedTx.id)
+      if (!oldTx) return prevTxs
+
+      // Ajusta o saldo das contas envolvidas
+      setAccounts((prevAccounts) =>
+        prevAccounts.map((acc) => {
+          let newBalance = acc.balance
+
+          // Desfaz o impacto da transação antiga
+          if (acc.id === oldTx.accountId) {
+            const oldDelta = oldTx.type === 'income' ? oldTx.amount : -oldTx.amount
+            newBalance -= oldDelta
+          }
+
+          // Aplica o impacto da transação atualizada
+          if (acc.id === updatedTx.accountId) {
+            const newDelta = updatedTx.type === 'income' ? updatedTx.amount : -updatedTx.amount
+            newBalance += newDelta
+          }
+
+          return { ...acc, balance: newBalance }
+        })
+      )
+
+      return prevTxs.map((t) => (t.id === updatedTx.id ? updatedTx : t))
+    })
+  }, [])
+
+  // Mutação: Excluir transação e restaurar saldo da conta
+  const deleteTransaction = useCallback((transactionId: string) => {
+    setTransactions((prevTxs) => {
+      const txToDelete = prevTxs.find((t) => t.id === transactionId)
+      if (!txToDelete) return prevTxs
+
+      setAccounts((prevAccounts) =>
+        prevAccounts.map((acc) => {
+          if (acc.id === txToDelete.accountId) {
+            const delta = txToDelete.type === 'income' ? txToDelete.amount : -txToDelete.amount
+            return { ...acc, balance: acc.balance - delta }
+          }
+          return acc
+        })
+      )
+
+      return prevTxs.filter((t) => t.id !== transactionId)
+    })
+  }, [])
+
   // Mutação: Adicionar meta
   const addGoal = useCallback((newGoal: Goal) => {
     setGoals((prev) => [newGoal, ...prev])
@@ -128,6 +179,8 @@ export function useFinance() {
     monthlyExpenseAverage,
     totalCurrentInvestments,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
     importTransactions,
     addAccount,
     addCategory,

@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/Header'
 import {
   HomeScreen,
   TransactionsScreen,
-  ImportScreen,
   SimulationsScreen,
   GoalsScreen,
 } from '@/screens'
@@ -26,6 +25,8 @@ export function App() {
     monthlyExpenseAverage,
     totalCurrentInvestments,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
     importTransactions,
     addAccount,
     addCategory,
@@ -115,8 +116,11 @@ export function App() {
               accounts={accounts}
               categories={categories}
               onAddTransaction={addTransaction}
+              onUpdateTransaction={updateTransaction}
+              onDeleteTransaction={deleteTransaction}
               onAddAccount={addAccount}
               onAddCategory={addCategory}
+              onImportTransactions={importTransactions}
               isModalOpen={isAddTxModalOpen}
               setIsModalOpen={setIsAddTxModalOpen}
               showValues={showValues}
@@ -124,10 +128,20 @@ export function App() {
           )}
 
           {currentTab === 'import' && (
-            <ImportScreen
+            <TransactionsScreen
+              transactions={transactions}
               accounts={accounts}
               categories={categories}
+              onAddTransaction={addTransaction}
+              onUpdateTransaction={updateTransaction}
+              onDeleteTransaction={deleteTransaction}
+              onAddAccount={addAccount}
+              onAddCategory={addCategory}
               onImportTransactions={importTransactions}
+              isModalOpen={isAddTxModalOpen}
+              setIsModalOpen={setIsAddTxModalOpen}
+              showValues={showValues}
+              initialSubTab="import"
             />
           )}
 
