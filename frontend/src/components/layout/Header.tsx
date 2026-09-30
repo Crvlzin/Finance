@@ -9,6 +9,7 @@ interface HeaderProps {
   onToggleSidebar: () => void
   showValues: boolean
   onToggleShowValues: () => void
+  showNewTransactionButton?: boolean
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   showValues,
   onToggleShowValues,
+  showNewTransactionButton = true,
 }) => {
   return (
     <header className="h-20 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 sm:px-8 flex items-center justify-between sticky top-0 z-10">
@@ -55,13 +57,15 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </button>
 
-        <button
-          onClick={onNavigateToNewTransaction}
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2 rounded-xl text-xs transition-all shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Nova Transação</span>
-        </button>
+        {showNewTransactionButton && (
+          <button
+            onClick={onNavigateToNewTransaction}
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2 rounded-xl text-xs transition-all shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Nova Transação</span>
+          </button>
+        )}
       </div>
     </header>
   )

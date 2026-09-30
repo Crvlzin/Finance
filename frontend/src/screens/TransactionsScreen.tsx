@@ -17,6 +17,7 @@ interface TransactionsScreenProps {
   onAddTransaction: (newTx: Omit<Transaction, 'id'>) => void
   isModalOpen: boolean
   setIsModalOpen: (open: boolean) => void
+  showValues?: boolean
 }
 
 export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
@@ -26,6 +27,7 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
   onAddTransaction,
   isModalOpen,
   setIsModalOpen,
+  showValues = true,
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<'all' | 'income' | 'expense'>('all')
@@ -230,7 +232,9 @@ export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
                           tx.type === 'income' ? 'text-emerald-400' : 'text-slate-100'
                         }`}
                       >
-                        {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                        {showValues
+                          ? `${tx.type === 'income' ? '+' : '-'} ${formatCurrency(tx.amount)}`
+                          : '••••••'}
                       </span>
                     </td>
                   </tr>

@@ -80,6 +80,7 @@ export function App() {
         onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
         showValues={showValues}
         onToggleShowValues={toggleShowValues}
+        showNewTransactionButton={currentTab !== 'transactions'}
       />
 
       {/* Sidebar Ilha Sobreposta (h-fit, abraça apenas os ícones) */}
@@ -114,6 +115,7 @@ export function App() {
               onAddTransaction={addTransaction}
               isModalOpen={isAddTxModalOpen}
               setIsModalOpen={setIsAddTxModalOpen}
+              showValues={showValues}
             />
           )}
 
