@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React from 'react'
 import {
   Sparkles,
   Calculator,
@@ -13,43 +13,24 @@ import {
   Tooltip,
 } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
-import { calculateCompoundInterest } from '@/data/mockData'
-import type { SimulationParams } from '@/types'
+import { useSimulation } from '@/hooks'
 
-export const SimulationsView: React.FC = () => {
-  // Estado dos Parâmetros de Simulação
-  const [initialAmount, setInitialAmount] = useState<number>(10000)
-  const [monthlyContribution, setMonthlyContribution] = useState<number>(1500)
-  const [annualRate, setAnnualRate] = useState<number>(11.75) // Selic / CDI atual aproximado
-  const [years, setYears] = useState<number>(10)
-  const [inflationRate, setInflationRate] = useState<number>(4.5)
-
-  // Cálculo da projeção
-  const params: SimulationParams = useMemo(
-    () => ({
-      initialAmount,
-      monthlyContribution,
-      annualRate,
-      years,
-      inflationRate,
-    }),
-    [initialAmount, monthlyContribution, annualRate, years, inflationRate]
-  )
-
-  const projectionData = useMemo(() => calculateCompoundInterest(params), [params])
-
-  const finalPoint = projectionData[projectionData.length - 1] || {
-    totalBalance: 0,
-    totalInvested: 0,
-    totalInterest: 0,
-    realPurchasingPower: 0,
-    monthlyPassiveIncome: 0,
-  }
-
-  const interestMultiplier =
-    finalPoint.totalInvested > 0
-      ? (finalPoint.totalBalance / finalPoint.totalInvested).toFixed(2)
-      : '1'
+export const SimulationsScreen: React.FC = () => {
+  const {
+    initialAmount,
+    setInitialAmount,
+    monthlyContribution,
+    setMonthlyContribution,
+    annualRate,
+    setAnnualRate,
+    years,
+    setYears,
+    inflationRate,
+    setInflationRate,
+    projectionData,
+    finalPoint,
+    interestMultiplier,
+  } = useSimulation()
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

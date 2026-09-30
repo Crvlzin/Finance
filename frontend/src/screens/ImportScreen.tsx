@@ -11,7 +11,7 @@ import {
 import { formatCurrency } from '@/lib/utils'
 import type { Account, Category, Transaction } from '@/types'
 
-interface CsvImportViewProps {
+interface ImportScreenProps {
   accounts: Account[]
   categories: Category[]
   onImportTransactions: (imported: Omit<Transaction, 'id'>[]) => void
@@ -43,7 +43,7 @@ const sampleItauCsv = `data;lancamento;valor
 14/09/2026;CONDOMINIO RESIDENCIAL;-650.00
 20/09/2026;CURSO UDEMY PYTHON TS;-79.90`
 
-export const CsvImportView: React.FC<CsvImportViewProps> = ({
+export const ImportScreen: React.FC<ImportScreenProps> = ({
   accounts,
   categories,
   onImportTransactions,

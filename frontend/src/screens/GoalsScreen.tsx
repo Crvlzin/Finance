@@ -8,14 +8,14 @@ import {
 import { formatCurrency } from '@/lib/utils'
 import type { Goal } from '@/types'
 
-interface GoalsViewProps {
+interface GoalsScreenProps {
   goals: Goal[]
   monthlyExpenseAverage: number
   totalCurrentInvestments: number
   onAddGoal: (newGoal: Goal) => void
 }
 
-export const GoalsView: React.FC<GoalsViewProps> = ({
+export const GoalsScreen: React.FC<GoalsScreenProps> = ({
   goals,
   monthlyExpenseAverage,
   totalCurrentInvestments,

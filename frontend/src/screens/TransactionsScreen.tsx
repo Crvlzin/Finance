@@ -10,7 +10,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Account, Category, PaymentMethod, Transaction, TransactionType } from '@/types'
 
-interface TransactionsViewProps {
+interface TransactionsScreenProps {
   transactions: Transaction[]
   accounts: Account[]
   categories: Category[]
@@ -19,7 +19,7 @@ interface TransactionsViewProps {
   setIsModalOpen: (open: boolean) => void
 }
 
-export const TransactionsView: React.FC<TransactionsViewProps> = ({
+export const TransactionsScreen: React.FC<TransactionsScreenProps> = ({
   transactions,
   accounts,
   categories,

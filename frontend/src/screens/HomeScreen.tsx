@@ -1,9 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   TrendingUp,
   TrendingDown,
   PiggyBank,
-  Wallet,
   ArrowUpRight,
   ArrowDownRight,
   CreditCard,
@@ -19,28 +18,36 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Account, CashFlowPoint, CategoryExpense, Transaction } from '@/types'
 
-interface DashboardViewProps {
+interface HomeScreenProps {
   accounts: Account[]
   transactions: Transaction[]
   cashFlow: CashFlowPoint[]
   categoryExpenses: CategoryExpense[]
   onNavigateToTransactions: () => void
+  showValues: boolean
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({
+export const HomeScreen: React.FC<HomeScreenProps> = ({
   accounts,
   transactions,
   cashFlow,
   categoryExpenses,
   onNavigateToTransactions,
+  showValues,
 }) => {
+  // Estado para destacar e animar a categoria ativa no hover
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(null)
+
+  // Helper para mascarar valores quando a privacidade estiver ativa
+  const formatPrivateValue = (val: number): string => {
+    return showValues ? formatCurrency(val) : '••••••'
+  }
+
   // Cálculos dinâmicos
-  const totalBalance = accounts.reduce((acc, curr) => acc + curr.balance, 0)
   const currentMonthIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, t) => acc + t.amount, 0)
@@ -56,26 +63,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     .slice(0, 5)
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* 1. KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Patrimônio Total */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Patrimônio Total</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <Wallet className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-white font-mono tracking-tight">
-            {formatCurrency(totalBalance)}
-          </div>
-          <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-            <span className="text-emerald-400 font-medium">Consolidado</span> em {accounts.length} contas
-          </p>
-        </div>
-
-        {/* Card 2: Receitas do Mês */}
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* 1. KPI Cards (3 Cards: Entradas, Saídas e Balanço Líquido) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1: Entradas do Mês */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Entradas do Mês</span>
@@ -84,7 +75,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div className="text-2xl font-bold text-teal-400 font-mono tracking-tight">
-            {formatCurrency(currentMonthIncome)}
+            {formatPrivateValue(currentMonthIncome)}
           </div>
           <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
             <ArrowUpRight className="w-3.5 h-3.5 text-teal-400" />
@@ -92,7 +83,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        {/* Card 3: Despesas do Mês */}
+        {/* Card 2: Saídas do Mês */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Saídas do Mês</span>
@@ -101,7 +92,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div className="text-2xl font-bold text-rose-400 font-mono tracking-tight">
-            {formatCurrency(currentMonthExpense)}
+            {formatPrivateValue(currentMonthExpense)}
           </div>
           <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
             <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
@@ -109,19 +100,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        {/* Card 4: Taxa de Poupança */}
+        {/* Card 3: Balanço Líquido (Destaque para o valor líquido, com porcentagem em baixo) */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Taxa de Aporte</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+            <span className="text-xs font-semibold uppercase tracking-wider">Balanço Líquido</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <PiggyBank className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-indigo-400 font-mono tracking-tight">
-            {savingsRate.toFixed(1)}%
+          <div className="text-2xl font-bold text-white font-mono tracking-tight">
+            {formatPrivateValue(netSavings)}
           </div>
-          <p className="text-xs text-slate-400 mt-2">
-            Sobra líquida: <span className="text-white font-medium">{formatCurrency(netSavings)}</span>
+          <p className="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+            <span className="text-emerald-400 font-semibold font-mono">
+              {showValues ? `${savingsRate.toFixed(1)}%` : '•••%'}
+            </span>
+            <span>da renda economizada este mês</span>
           </p>
         </div>
       </div>
@@ -163,7 +157,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   stroke="#64748B"
                   fontSize={12}
                   tickLine={false}
-                  tickFormatter={(val) => `R$ ${val / 1000}k`}
+                  tickFormatter={(val) => (showValues ? `R$ ${val / 1000}k` : '•••')}
                 />
                 <Tooltip
                   contentStyle={{
@@ -173,7 +167,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     color: '#FFF',
                     fontSize: '12px',
                   }}
-                  formatter={(value: any) => formatCurrency(Number(value))}
+                  formatter={(value: any) => formatPrivateValue(Number(value))}
                 />
                 <Area
                   type="monotone"
@@ -198,27 +192,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Despesas por Categoria (1 coluna) */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col">
-          <div className="mb-4">
+        {/* Despesas por Categoria com Cards Animados (1 coluna) */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
             <h2 className="text-base font-bold text-white tracking-tight">Despesas por Categoria</h2>
-            <p className="text-xs text-slate-400">Distribuição percentual deste mês</p>
+            <p className="text-xs text-slate-400">Passe o cursor para inspecionar</p>
           </div>
 
-          <div className="h-56 w-full flex-1">
+          {/* Gráfico Donut com hover interativo */}
+          <div className="h-48 w-full my-2">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={categoryExpenses}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={75}
                   paddingAngle={4}
                   dataKey="amount"
+                  onMouseEnter={(_, index) => setActiveCategoryIndex(index)}
+                  onMouseLeave={() => setActiveCategoryIndex(null)}
                 >
                   {categoryExpenses.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      stroke={activeCategoryIndex === index ? '#ffffff' : 'transparent'}
+                      strokeWidth={activeCategoryIndex === index ? 2 : 0}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-out',
+                      }}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -229,20 +235,43 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     color: '#FFF',
                     fontSize: '12px',
                   }}
-                  formatter={(value: any) => formatCurrency(Number(value))}
-                />
-                <Legend
-                  layout="horizontal"
-                  verticalAlign="bottom"
-                  align="center"
-                  formatter={(_, entry: any) => (
-                    <span className="text-xs text-slate-300 font-medium">
-                      {entry.payload.category} ({entry.payload.percentage}%)
-                    </span>
-                  )}
+                  formatter={(value: any) => formatPrivateValue(Number(value))}
                 />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Cards Interativos com Animação de Leve Subida */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+            {categoryExpenses.map((cat, index) => {
+              const isHovered = activeCategoryIndex === index
+
+              return (
+                <div
+                  key={cat.category}
+                  onMouseEnter={() => setActiveCategoryIndex(index)}
+                  onMouseLeave={() => setActiveCategoryIndex(null)}
+                  className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer ${
+                    isHovered
+                      ? '-translate-y-1.5 shadow-lg shadow-black/40 border-slate-600 bg-slate-800/90'
+                      : 'bg-slate-950/50 border-slate-800/70 hover:-translate-y-1 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span className="text-xs text-slate-300 font-medium truncate">
+                      {cat.category}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-white font-mono">
+                    {formatPrivateValue(cat.amount)}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -282,11 +311,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       acc.balance < 0 ? 'text-rose-400' : 'text-slate-100'
                     }`}
                   >
-                    {formatCurrency(acc.balance)}
+                    {formatPrivateValue(acc.balance)}
                   </p>
                   {acc.creditLimit && (
                     <p className="text-[10px] text-slate-400">
-                      Limite: {formatCurrency(acc.creditLimit)}
+                      Limite: {formatPrivateValue(acc.creditLimit)}
                     </p>
                   )}
                 </div>
@@ -345,7 +374,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         tx.type === 'income' ? 'text-emerald-400' : 'text-slate-100'
                       }`}
                     >
-                      {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                      {showValues
+                        ? `${tx.type === 'income' ? '+' : '-'} ${formatCurrency(tx.amount)}`
+                        : '••••••'}
                     </p>
                     <p className="text-[11px] text-slate-400">{formatDate(tx.date)}</p>
                   </div>
