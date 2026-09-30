@@ -1,3 +1,3 @@
 export { useFinance } from './useFinance'
 export { usePrivacy } from './usePrivacy'
-export { useSimulation } from './useSimulation'
+export { useSimulation, type RateType, type PeriodType } from './useSimulation'

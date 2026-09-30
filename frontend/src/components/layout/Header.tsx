@@ -10,6 +10,7 @@ interface HeaderProps {
   showValues: boolean
   onToggleShowValues: () => void
   showNewTransactionButton?: boolean
+  showValuesButton?: boolean
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   showValues,
   onToggleShowValues,
   showNewTransactionButton = true,
+  showValuesButton = true,
 }) => {
   return (
     <header className="h-20 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 sm:px-8 flex items-center justify-between sticky top-0 z-10">
@@ -42,20 +44,22 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Ações da Direita: Botão de Olho (Privacidade) + Nova Transação */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={onToggleShowValues}
-          title={showValues ? 'Ocultar valores' : 'Mostrar valores'}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-xs active:scale-95"
-        >
-          {showValues ? (
-            <Eye className="w-4 h-4 text-emerald-400" />
-          ) : (
-            <EyeOff className="w-4 h-4 text-rose-400" />
-          )}
-          <span className="hidden sm:inline">
-            {showValues ? 'Ocultar' : 'Mostrar'}
-          </span>
-        </button>
+        {showValuesButton && (
+          <button
+            onClick={onToggleShowValues}
+            title={showValues ? 'Ocultar valores' : 'Mostrar valores'}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-xs active:scale-95"
+          >
+            {showValues ? (
+              <Eye className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <EyeOff className="w-4 h-4 text-rose-400" />
+            )}
+            <span className="hidden sm:inline">
+              {showValues ? 'Ocultar' : 'Mostrar'}
+            </span>
+          </button>
+        )}
 
         {showNewTransactionButton && (
           <button

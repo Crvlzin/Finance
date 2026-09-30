@@ -83,7 +83,8 @@ export function App() {
         onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
         showValues={showValues}
         onToggleShowValues={toggleShowValues}
-        showNewTransactionButton={currentTab !== 'transactions'}
+        showNewTransactionButton={currentTab !== 'transactions' && currentTab !== 'simulations'}
+        showValuesButton={currentTab !== 'simulations'}
       />
 
       {/* Sidebar Ilha Sobreposta (h-fit, abraça apenas os ícones) */}

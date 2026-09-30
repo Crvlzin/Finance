@@ -63,11 +63,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {item.badge}
                 </span>
               )}
-              {!isCollapsed && item.highlight && (
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-medium">
-                  Novo
-                </span>
-              )}
             </button>
           )
         })}
