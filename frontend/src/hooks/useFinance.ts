@@ -166,6 +166,16 @@ export function useFinance() {
     setGoals((prev) => [newGoal, ...prev])
   }, [])
 
+  // Mutação: Atualizar meta existente
+  const updateGoal = useCallback((updatedGoal: Goal) => {
+    setGoals((prev) => prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)))
+  }, [])
+
+  // Mutação: Excluir meta
+  const deleteGoal = useCallback((goalId: string) => {
+    setGoals((prev) => prev.filter((g) => g.id !== goalId))
+  }, [])
+
   return {
     transactions,
     accounts,
@@ -185,5 +195,7 @@ export function useFinance() {
     addAccount,
     addCategory,
     addGoal,
+    updateGoal,
+    deleteGoal,
   }
 }

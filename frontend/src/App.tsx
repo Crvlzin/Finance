@@ -31,6 +31,8 @@ export function App() {
     addAccount,
     addCategory,
     addGoal,
+    updateGoal,
+    deleteGoal,
   } = useFinance()
 
   // Redireciona para a tela de transações e abre o formulário
@@ -83,7 +85,11 @@ export function App() {
         onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
         showValues={showValues}
         onToggleShowValues={toggleShowValues}
-        showNewTransactionButton={currentTab !== 'transactions' && currentTab !== 'simulations'}
+        showNewTransactionButton={
+          currentTab !== 'transactions' &&
+          currentTab !== 'simulations' &&
+          currentTab !== 'goals'
+        }
         showValuesButton={currentTab !== 'simulations'}
       />
 
@@ -154,6 +160,9 @@ export function App() {
               monthlyExpenseAverage={monthlyExpenseAverage}
               totalCurrentInvestments={totalCurrentInvestments}
               onAddGoal={addGoal}
+              onUpdateGoal={updateGoal}
+              onDeleteGoal={deleteGoal}
+              showValues={showValues}
             />
           )}
         </div>
