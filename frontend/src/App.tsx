@@ -6,8 +6,10 @@ import {
   TransactionsScreen,
   SimulationsScreen,
   GoalsScreen,
+  LoginScreen,
+  SettingsScreen,
 } from '@/screens'
-import { useFinance, usePrivacy } from '@/hooks'
+import { useFinance, usePrivacy, useAuth } from '@/hooks'
 import { mockCashFlow, mockCategoryExpenses } from '@/data/mockData'
 
 export function App() {
@@ -16,6 +18,7 @@ export function App() {
   const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
 
   // Custom Hooks isolando regras de negócio e estado
+  const { user, isAuthenticated, login, register, updateProfile, changePassword, logout } = useAuth()
   const { showValues, toggleShowValues } = usePrivacy()
   const {
     transactions,
@@ -34,6 +37,11 @@ export function App() {
     updateGoal,
     deleteGoal,
   } = useFinance()
+
+  // Se o usuário não estiver autenticado, exibe a tela de Login
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={login} onRegister={register} />
+  }
 
   // Redireciona para a tela de transações e abre o formulário
   const handleNavigateToNewTransaction = () => {
@@ -69,6 +77,11 @@ export function App() {
           title: 'Metas & Reserva de Emergência',
           subtitle: 'Diagnóstico de segurança e evolução dos seus objetivos patrimoniais',
         }
+      case 'settings':
+        return {
+          title: 'Configurações da Conta',
+          subtitle: 'Gerencie suas credenciais, senha e informações de perfil',
+        }
     }
   }
 
@@ -88,9 +101,12 @@ export function App() {
         showNewTransactionButton={
           currentTab !== 'transactions' &&
           currentTab !== 'simulations' &&
-          currentTab !== 'goals'
+          currentTab !== 'goals' &&
+          currentTab !== 'settings'
         }
-        showValuesButton={currentTab !== 'simulations'}
+        showValuesButton={currentTab !== 'simulations' && currentTab !== 'settings'}
+        user={user}
+        onNavigateToSettings={() => setCurrentTab('settings')}
       />
 
       {/* Sidebar Ilha Sobreposta (h-fit, abraça apenas os ícones) */}
@@ -163,6 +179,15 @@ export function App() {
               onUpdateGoal={updateGoal}
               onDeleteGoal={deleteGoal}
               showValues={showValues}
+            />
+          )}
+
+          {currentTab === 'settings' && (
+            <SettingsScreen
+              user={user}
+              onUpdateProfile={updateProfile}
+              onChangePassword={changePassword}
+              onLogout={logout}
             />
           )}
         </div>

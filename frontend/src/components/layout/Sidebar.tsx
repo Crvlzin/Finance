@@ -4,10 +4,11 @@ import {
   ReceiptText,
   TrendingUp,
   Target,
+  Settings,
   type LucideIcon,
 } from 'lucide-react'
 
-export type TabType = 'visao-geral' | 'transactions' | 'import' | 'simulations' | 'goals'
+export type TabType = 'visao-geral' | 'transactions' | 'import' | 'simulations' | 'goals' | 'settings'
 
 interface MenuItem {
   id: TabType
@@ -33,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'transactions', label: 'Transações', icon: ReceiptText },
     { id: 'simulations', label: 'Simulador', icon: TrendingUp, highlight: true },
     { id: 'goals', label: 'Metas e Reserva', icon: Target },
+    { id: 'settings', label: 'Configurações', icon: Settings },
   ]
 
   return (
