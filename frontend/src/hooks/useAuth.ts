@@ -11,65 +11,53 @@ const AUTH_USER_KEY = '@financehub/auth-user'
 const AUTH_PASSWORD_KEY = '@financehub/auth-password'
 const AUTH_STATUS_KEY = '@financehub/auth-status'
 
-const DEFAULT_USER: User = {
-  id: 'usr-1',
-  name: 'Lucas Carvalho',
-  email: 'lucas@finance.com',
+const EMPTY_USER: User = {
+  id: '',
+  name: '',
+  email: '',
 }
-
-const DEFAULT_PASSWORD = '123456'
 
 export function useAuth() {
   const [user, setUser] = useState<User>(() => {
     try {
       const stored = localStorage.getItem(AUTH_USER_KEY)
-      return stored ? JSON.parse(stored) : DEFAULT_USER
+      return stored ? JSON.parse(stored) : EMPTY_USER
     } catch {
-      return DEFAULT_USER
+      return EMPTY_USER
     }
   })
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem(AUTH_STATUS_KEY)
-      return stored !== null ? JSON.parse(stored) : true
+      return stored !== null ? JSON.parse(stored) : false
     } catch {
-      return true
+      return false
     }
   })
 
-  // Login com validação de credenciais
+  // Login com validação de credenciais cadastradas
   const login = useCallback((emailInput: string, passwordInput: string): { success: boolean; error?: string } => {
     const trimmedEmail = emailInput.trim().toLowerCase()
     
-    // Obter senha cadastrada atual
-    let currentStoredPassword = DEFAULT_PASSWORD
-    try {
-      const p = localStorage.getItem(AUTH_PASSWORD_KEY)
-      if (p) currentStoredPassword = JSON.parse(p)
-    } catch {
-      currentStoredPassword = DEFAULT_PASSWORD
-    }
-
-    // Obter dados do usuário cadastrado
-    let currentStoredUser = DEFAULT_USER
-    try {
-      const u = localStorage.getItem(AUTH_USER_KEY)
-      if (u) currentStoredUser = JSON.parse(u)
-    } catch {
-      currentStoredUser = DEFAULT_USER
-    }
-
     if (!trimmedEmail || !passwordInput) {
       return { success: false, error: 'Por favor, preencha o e-mail e a senha.' }
     }
 
-    // Permite login com usuário registrado ou email atual
-    if (
-      trimmedEmail === currentStoredUser.email.toLowerCase() ||
-      trimmedEmail === DEFAULT_USER.email.toLowerCase()
-    ) {
-      if (passwordInput === currentStoredPassword || passwordInput === DEFAULT_PASSWORD) {
+    let storedUser: User | null = null
+    let storedPassword = ''
+    try {
+      const u = localStorage.getItem(AUTH_USER_KEY)
+      const p = localStorage.getItem(AUTH_PASSWORD_KEY)
+      if (u) storedUser = JSON.parse(u)
+      if (p) storedPassword = JSON.parse(p)
+    } catch {
+      storedUser = null
+    }
+
+    if (storedUser && storedUser.email.toLowerCase() === trimmedEmail) {
+      if (storedPassword === passwordInput) {
+        setUser(storedUser)
         setIsAuthenticated(true)
         localStorage.setItem(AUTH_STATUS_KEY, JSON.stringify(true))
         return { success: true }
@@ -77,22 +65,7 @@ export function useAuth() {
       return { success: false, error: 'Senha incorreta. Tente novamente.' }
     }
 
-    // Se for um novo email direto no login demo, aceita com senha >= 4 digitos
-    if (passwordInput.length >= 4) {
-      const newUser: User = {
-        id: `usr-${Date.now()}`,
-        name: trimmedEmail.split('@')[0],
-        email: trimmedEmail,
-      }
-      setUser(newUser)
-      setIsAuthenticated(true)
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser))
-      localStorage.setItem(AUTH_PASSWORD_KEY, JSON.stringify(passwordInput))
-      localStorage.setItem(AUTH_STATUS_KEY, JSON.stringify(true))
-      return { success: true }
-    }
-
-    return { success: false, error: 'Credenciais inválidas. Verifique os dados informados.' }
+    return { success: false, error: 'Usuário não encontrado. Crie uma conta na aba "Criar Conta".' }
   }, [])
 
   // Cadastro de nova conta
@@ -157,15 +130,15 @@ export function useAuth() {
 
   // Trocar senha
   const changePassword = useCallback((currentPasswordInput: string, newPasswordInput: string): { success: boolean; error?: string } => {
-    let currentStoredPassword = DEFAULT_PASSWORD
+    let storedPassword = ''
     try {
       const p = localStorage.getItem(AUTH_PASSWORD_KEY)
-      if (p) currentStoredPassword = JSON.parse(p)
+      if (p) storedPassword = JSON.parse(p)
     } catch {
-      currentStoredPassword = DEFAULT_PASSWORD
+      storedPassword = ''
     }
 
-    if (currentPasswordInput !== currentStoredPassword && currentPasswordInput !== DEFAULT_PASSWORD) {
+    if (currentPasswordInput !== storedPassword) {
       return { success: false, error: 'A senha atual informada está incorreta.' }
     }
 
@@ -173,7 +146,7 @@ export function useAuth() {
       return { success: false, error: 'A nova senha deve possuir pelo menos 6 caracteres.' }
     }
 
-    if (newPasswordInput === currentStoredPassword) {
+    if (newPasswordInput === storedPassword) {
       return { success: false, error: 'A nova senha deve ser diferente da senha atual.' }
     }
 

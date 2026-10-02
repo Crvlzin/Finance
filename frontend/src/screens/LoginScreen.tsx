@@ -9,7 +9,6 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
-  Zap,
 } from 'lucide-react'
 
 interface LoginScreenProps {
@@ -20,8 +19,8 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister }) => {
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('lucas@finance.com')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -54,15 +53,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
         }
       }, 400)
     }
-  }
-
-  // Preenchimento de demonstração com 1 clique
-  const handleFillDemo = () => {
-    setIsRegisterMode(false)
-    setName('')
-    setEmail('lucas@finance.com')
-    setPassword('123456')
-    setErrorMessage(null)
   }
 
   return (
@@ -231,18 +221,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister })
               )}
             </button>
           </form>
-
-          {/* Atalho Demo */}
-          <div className="pt-2 border-t border-slate-800/80 text-center">
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 text-xs transition-colors cursor-pointer"
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>Usar conta de teste (lucas@finance.com)</span>
-            </button>
-          </div>
         </div>
 
         {/* Rodapé de Segurança */}

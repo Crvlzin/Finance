@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { calculateCompoundInterest } from '@/data/mockData'
+import { calculateCompoundInterest } from '@/services/simulationService'
 import type { SimulationParams } from '@/types'
 
 export type RateType = 'yearly' | 'monthly'

@@ -72,9 +72,9 @@ export const GoalsScreen: React.FC<GoalsScreenProps> = ({
   const [emergencyBalance, setEmergencyBalance] = useState<number>(() => {
     try {
       const stored = localStorage.getItem(EMERGENCY_BALANCE_STORAGE_KEY)
-      return stored !== null ? JSON.parse(stored) : (totalCurrentInvestments || 47890.15)
+      return stored !== null ? JSON.parse(stored) : (totalCurrentInvestments || 0)
     } catch {
-      return totalCurrentInvestments || 47890.15
+      return totalCurrentInvestments || 0
     }
   })
 
@@ -83,22 +83,7 @@ export const GoalsScreen: React.FC<GoalsScreenProps> = ({
     try {
       const stored = localStorage.getItem(EMERGENCY_ENTRIES_STORAGE_KEY)
       if (stored) return JSON.parse(stored)
-      return [
-        {
-          id: 'ef-1',
-          date: '15/Set/2026',
-          amount: 35000,
-          type: 'deposit',
-          description: 'Aporte inicial consolidado',
-        },
-        {
-          id: 'ef-2',
-          date: '28/Set/2026',
-          amount: 12890.15,
-          type: 'deposit',
-          description: 'Aporte de rendimentos e economia',
-        },
-      ]
+      return []
     } catch {
       return []
     }
@@ -499,8 +484,27 @@ export const GoalsScreen: React.FC<GoalsScreenProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {goals.map((g) => {
+        {goals.length === 0 ? (
+          <div className="py-12 border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center p-6 bg-slate-950/40">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-3">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-white mb-1">Nenhuma meta cadastrada</h4>
+            <p className="text-xs text-slate-400 max-w-sm mb-4">
+              Crie metas de curto, médio ou longo prazo para acompanhar o progresso dos seus sonhos e conquistas.
+            </p>
+            <button
+              type="button"
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-semibold shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Criar Primeira Meta</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {goals.map((g) => {
             const progress = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100))
             const remaining = Math.max(0, g.targetAmount - g.currentAmount)
 
@@ -584,7 +588,8 @@ export const GoalsScreen: React.FC<GoalsScreenProps> = ({
             )
           })}
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Modal de Movimentação da Reserva (Aporte / Resgate / Ajuste) */}
       {isMovementModalOpen && (

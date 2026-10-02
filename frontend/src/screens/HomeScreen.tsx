@@ -139,60 +139,72 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </div>
 
-          <div className="w-full flex-1 min-h-[300px] mt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={cashFlow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#F43F5E" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="month" stroke="#64748B" fontSize={12} tickLine={false} />
-                <YAxis
-                  stroke="#64748B"
-                  fontSize={12}
-                  tickLine={false}
-                  tickFormatter={(val) => (showValues ? `R$ ${val / 1000}k` : '•••')}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0F172A',
-                    borderColor: '#334155',
-                    borderRadius: '8px',
-                    color: '#FFF',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: any, name: any) => [
-                    formatPrivateValue(Number(value)),
-                    name === 'receitas' ? 'Receitas' : name === 'despesas' ? 'Despesas' : name,
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="receitas"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#incomeGradient)"
-                  name="Receitas"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="despesas"
-                  stroke="#F43F5E"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#expenseGradient)"
-                  name="Despesas"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {cashFlow.length === 0 ? (
+            <div className="w-full flex-1 min-h-[300px] mt-2 flex flex-col items-center justify-center border border-dashed border-slate-800 rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center text-slate-500 mb-3">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-semibold text-slate-300">Sem dados de fluxo de caixa</p>
+              <p className="text-xs text-slate-500 max-w-xs mt-1">
+                Adicione receitas e despesas para acompanhar a evolução mensal das suas finanças.
+              </p>
+            </div>
+          ) : (
+            <div className="w-full flex-1 min-h-[300px] mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={cashFlow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#F43F5E" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" stroke="#64748B" fontSize={12} tickLine={false} />
+                  <YAxis
+                    stroke="#64748B"
+                    fontSize={12}
+                    tickLine={false}
+                    tickFormatter={(val) => (showValues ? `R$ ${val / 1000}k` : '•••')}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#0F172A',
+                      borderColor: '#334155',
+                      borderRadius: '8px',
+                      color: '#FFF',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: any, name: any) => [
+                      formatPrivateValue(Number(value)),
+                      name === 'receitas' ? 'Receitas' : name === 'despesas' ? 'Despesas' : name,
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="receitas"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#incomeGradient)"
+                    name="Receitas"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="despesas"
+                    stroke="#F43F5E"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#expenseGradient)"
+                    name="Despesas"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         {/* Despesas por Categoria com Cards Animados (1 coluna) */}
@@ -202,84 +214,93 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <p className="text-xs text-slate-400">Passe o cursor para inspecionar</p>
           </div>
 
-          {/* Gráfico Donut com hover interativo */}
-          <div className="h-48 w-full my-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryExpenses}
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="amount"
-                  onMouseEnter={(_, index) => setActiveCategoryIndex(index)}
-                  onMouseLeave={() => setActiveCategoryIndex(null)}
-                >
-                  {categoryExpenses.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      stroke={activeCategoryIndex === index ? '#ffffff' : 'transparent'}
-                      strokeWidth={activeCategoryIndex === index ? 2 : 0}
-                      style={{
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-out',
+          {categoryExpenses.length === 0 ? (
+            <div className="h-48 w-full my-2 flex flex-col items-center justify-center border border-dashed border-slate-800 rounded-xl p-4 text-center">
+              <p className="text-xs font-semibold text-slate-300">Nenhuma despesa categorizada</p>
+              <p className="text-[11px] text-slate-500 mt-1">Os gastos por categoria aparecerão aqui.</p>
+            </div>
+          ) : (
+            <>
+              {/* Gráfico Donut com hover interativo */}
+              <div className="h-48 w-full my-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryExpenses}
+                      nameKey="category"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="amount"
+                      onMouseEnter={(_, index) => setActiveCategoryIndex(index)}
+                      onMouseLeave={() => setActiveCategoryIndex(null)}
+                    >
+                      {categoryExpenses.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color}
+                          stroke={activeCategoryIndex === index ? '#ffffff' : 'transparent'}
+                          strokeWidth={activeCategoryIndex === index ? 2 : 0}
+                          style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-out',
+                          }}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0F172A',
+                        borderColor: '#334155',
+                        borderRadius: '8px',
+                        color: '#FFF',
+                        fontSize: '12px',
                       }}
+                      formatter={(value: any, name: any) => [
+                        formatPrivateValue(Number(value)),
+                        name || 'Total',
+                      ]}
                     />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0F172A',
-                    borderColor: '#334155',
-                    borderRadius: '8px',
-                    color: '#FFF',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: any, name: any) => [
-                    formatPrivateValue(Number(value)),
-                    name || 'Total',
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-          {/* Cards Interativos com Animação de Leve Subida */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
-            {categoryExpenses.map((cat, index) => {
-              const isHovered = activeCategoryIndex === index
+              {/* Cards Interativos com Animação de Leve Subida */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                {categoryExpenses.map((cat, index) => {
+                  const isHovered = activeCategoryIndex === index
 
-              return (
-                <div
-                  key={cat.category}
-                  onMouseEnter={() => setActiveCategoryIndex(index)}
-                  onMouseLeave={() => setActiveCategoryIndex(null)}
-                  className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer ${
-                    isHovered
-                      ? '-translate-y-1.5 shadow-lg shadow-black/40 border-slate-600 bg-slate-800/90'
-                      : 'bg-slate-950/50 border-slate-800/70 hover:-translate-y-1 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: cat.color }}
-                    />
-                    <span className="text-xs text-slate-300 font-medium truncate">
-                      {cat.category}
-                    </span>
-                  </div>
-                  <div className="text-xs font-bold text-white font-mono">
-                    {formatPrivateValue(cat.amount)}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  return (
+                    <div
+                      key={cat.category}
+                      onMouseEnter={() => setActiveCategoryIndex(index)}
+                      onMouseLeave={() => setActiveCategoryIndex(null)}
+                      className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer ${
+                        isHovered
+                          ? '-translate-y-1.5 shadow-lg shadow-black/40 border-slate-600 bg-slate-800/90'
+                          : 'bg-slate-950/50 border-slate-800/70 hover:-translate-y-1 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <span className="text-xs text-slate-300 font-medium truncate">
+                          {cat.category}
+                        </span>
+                      </div>
+                      <div className="text-xs font-bold text-white font-mono">
+                        {formatPrivateValue(cat.amount)}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -291,43 +312,50 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <p className="text-xs text-slate-400 mb-4">Suas carteiras integradas</p>
 
           <div className="space-y-3">
-            {accounts.map((acc) => (
-              <div
-                key={acc.id}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                    style={{ backgroundColor: `${acc.color}25`, borderColor: `${acc.color}50` }}
-                  >
-                    {acc.type === 'credit_card' ? (
-                      <CreditCard className="w-5 h-5" style={{ color: acc.color }} />
-                    ) : (
-                      <Building2 className="w-5 h-5" style={{ color: acc.color }} />
+            {accounts.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-slate-800 text-center">
+                <p className="text-xs font-semibold text-slate-300">Nenhuma conta cadastrada</p>
+                <p className="text-[11px] text-slate-500 mt-1">Cadastre contas ou bancos na aba Transações.</p>
+              </div>
+            ) : (
+              accounts.map((acc) => (
+                <div
+                  key={acc.id}
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                      style={{ backgroundColor: `${acc.color}25`, borderColor: `${acc.color}50` }}
+                    >
+                      {acc.type === 'credit_card' ? (
+                        <CreditCard className="w-5 h-5" style={{ color: acc.color }} />
+                      ) : (
+                        <Building2 className="w-5 h-5" style={{ color: acc.color }} />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">{acc.name}</h3>
+                      <p className="text-[11px] text-slate-400 capitalize">{acc.type.replace('_', ' ')}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`text-sm font-bold font-mono ${
+                        acc.balance < 0 ? 'text-rose-400' : 'text-slate-100'
+                      }`}
+                    >
+                      {formatPrivateValue(acc.balance)}
+                    </p>
+                    {acc.creditLimit && (
+                      <p className="text-[10px] text-slate-400">
+                        Limite: {formatPrivateValue(acc.creditLimit)}
+                      </p>
                     )}
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">{acc.name}</h3>
-                    <p className="text-[11px] text-slate-400 capitalize">{acc.type.replace('_', ' ')}</p>
-                  </div>
                 </div>
-                <div className="text-right">
-                  <p
-                    className={`text-sm font-bold font-mono ${
-                      acc.balance < 0 ? 'text-rose-400' : 'text-slate-100'
-                    }`}
-                  >
-                    {formatPrivateValue(acc.balance)}
-                  </p>
-                  {acc.creditLimit && (
-                    <p className="text-[10px] text-slate-400">
-                      Limite: {formatPrivateValue(acc.creditLimit)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -349,46 +377,55 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
 
             <div className="divide-y divide-slate-800/80">
-              {recentTransactions.map((tx) => (
-                <div key={tx.id} className="py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        tx.type === 'income'
-                          ? 'bg-emerald-500/10 text-emerald-400'
-                          : 'bg-rose-500/10 text-rose-400'
-                      }`}
-                    >
-                      {tx.type === 'income' ? (
-                        <ArrowUpRight className="w-4 h-4" />
-                      ) : (
-                        <ArrowDownRight className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200">{tx.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                        <span>{tx.categoryName}</span>
-                        <span>•</span>
-                        <span>{tx.accountName}</span>
+              {recentTransactions.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-sm font-semibold text-slate-300">Nenhuma transação recente</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Suas receitas e despesas registradas aparecerão listadas aqui.
+                  </p>
+                </div>
+              ) : (
+                recentTransactions.map((tx) => (
+                  <div key={tx.id} className="py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                          tx.type === 'income'
+                            ? 'bg-emerald-500/10 text-emerald-400'
+                            : 'bg-rose-500/10 text-rose-400'
+                        }`}
+                      >
+                        {tx.type === 'income' ? (
+                          <ArrowUpRight className="w-4 h-4" />
+                        ) : (
+                          <ArrowDownRight className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-200">{tx.description}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          <span>{tx.categoryName}</span>
+                          <span>•</span>
+                          <span>{tx.accountName}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    <p
-                      className={`text-sm font-bold font-mono ${
-                        tx.type === 'income' ? 'text-emerald-400' : 'text-slate-100'
-                      }`}
-                    >
-                      {showValues
-                        ? `${tx.type === 'income' ? '+' : '-'} ${formatCurrency(tx.amount)}`
-                        : '••••••'}
-                    </p>
-                    <p className="text-[11px] text-slate-400">{formatDate(tx.date)}</p>
+                    <div className="text-right">
+                      <p
+                        className={`text-sm font-bold font-mono ${
+                          tx.type === 'income' ? 'text-emerald-400' : 'text-slate-100'
+                        }`}
+                      >
+                        {showValues
+                          ? `${tx.type === 'income' ? '+' : '-'} ${formatCurrency(tx.amount)}`
+                          : '••••••'}
+                      </p>
+                      <p className="text-[11px] text-slate-400">{formatDate(tx.date)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

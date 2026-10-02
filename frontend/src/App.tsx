@@ -10,7 +10,6 @@ import {
   SettingsScreen,
 } from '@/screens'
 import { useFinance, usePrivacy, useAuth } from '@/hooks'
-import { mockCashFlow, mockCategoryExpenses } from '@/data/mockData'
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('visao-geral')
@@ -25,6 +24,8 @@ export function App() {
     accounts,
     categories,
     goals,
+    cashFlow,
+    categoryExpenses,
     monthlyExpenseAverage,
     totalCurrentInvestments,
     addTransaction,
@@ -126,8 +127,8 @@ export function App() {
             <HomeScreen
               accounts={accounts}
               transactions={transactions}
-              cashFlow={mockCashFlow}
-              categoryExpenses={mockCategoryExpenses}
+              cashFlow={cashFlow}
+              categoryExpenses={categoryExpenses}
               onNavigateToTransactions={() => setCurrentTab('transactions')}
               showValues={showValues}
             />
