@@ -18,9 +18,12 @@ export class ApiError extends Error {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  const headers = {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('@financehub/auth-token') : null
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
   }
 
   const response = await fetch(url, { ...options, headers })
